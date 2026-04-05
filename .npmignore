@@ -1,0 +1,12 @@
+tsconfig.json
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+node_modules/
+dist-dev/
+dist-min/
+src/
+test/
+pnpm-lock.yaml
