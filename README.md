@@ -31,7 +31,11 @@ CEREBRAS_API_KEY=sk_xxxxxxxxxxxxxxxxxxxxx
 OPENROUTER_API_KEY=sk_xxxxxxxxxxxxxxxxxxxxx
 GOOGLE_API_KEY=sk_xxxxxxxxxxxxxxxxxxxxx
 ```
+### Importing
 
+```typescript
+import { Chat } from "@trixty/auto-ai";
+```
 
 ### Explicit provider
 
