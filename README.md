@@ -14,11 +14,11 @@ Auto AI automatically selects the best provider for a given model name and retur
 ## Install
 
 ```bash
-npm install auto-ai
+npm install @trixty/auto-ai
 # or
-pnpm add auto-ai
+pnpm add @trixty/auto-ai
 # or
-yarn add auto-ai
+yarn add @trixty/auto-ai
 ```
 
 ## Environment Setup
