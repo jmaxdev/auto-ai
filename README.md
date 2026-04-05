@@ -32,22 +32,51 @@ OPENROUTER_API_KEY=sk_xxxxxxxxxxxxxxxxxxxxx
 GOOGLE_API_KEY=sk_xxxxxxxxxxxxxxxxxxxxx
 ```
 
-## Usage
+
+### Explicit provider
 
 ```typescript
-import { Chat } from "auto-ai";
-
 const response = await Chat(
-  [{ role: "user", content: "Hello! What can you do?" }],
-  {
-    model: "openai/gpt-3.5-turbo",
-    temperature: 0.7,
-    max_completion_tokens: 512,
-  }
+  [{ role: "user", content: "Summarize this text." }],
+  { model: "llama3-70b-8192", service: "Groq" }
 );
-
 console.log(response);
 ```
+
+### Prefix syntax
+
+```typescript
+const response = await Chat([{ role: "user", content: "Write a haiku." }], {
+  model: "openrouter:openai/gpt-4",
+});
+console.log(response);
+```
+
+### Automatic inference
+
+```typescript
+const response = await Chat(
+  [{ role: "user", content: "Translate this sentence." }],
+  { model: "anthropic/claude-3.5-sonnet" }
+);
+console.log(response);
+```
+
+### Exclude Service
+
+```typescript
+const response = await Chat(messages, {
+    serviceExclusion: ["Google"] // Exclude Google.
+  });
+```
+
+### Plain Text Response
+
+```typescript
+const response = await Chat(messages, {}, true);
+console.log(response)
+```
+
 
 ## How Service Selection Works
 
@@ -108,37 +137,6 @@ interface ChatOptions {
 - `stop` – Optional stop sequences.
 - `temperature` – Controls randomness.
 - `max_completion_tokens` – Maximum generation length.
-
-## Examples
-
-### Explicit provider
-
-```typescript
-const response = await Chat(
-  [{ role: "user", content: "Summarize this text." }],
-  { model: "llama3-70b-8192", service: "Groq" }
-);
-console.log(response);
-```
-
-### Prefix syntax
-
-```typescript
-const response = await Chat([{ role: "user", content: "Write a haiku." }], {
-  model: "openrouter:openai/gpt-4",
-});
-console.log(response);
-```
-
-### Automatic inference
-
-```typescript
-const response = await Chat(
-  [{ role: "user", content: "Translate this sentence." }],
-  { model: "anthropic/claude-3.5-sonnet" }
-);
-console.log(response);
-```
 
 ## Provider Defaults
 
