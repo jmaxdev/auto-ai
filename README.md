@@ -133,6 +133,8 @@ interface ChatOptions {
   stop?: string[];
   temperature?: number;
   max_completion_tokens?: number;
+  tools?: Tool[];
+  serviceExclusion?: string[];
 }
 ```
 
@@ -141,6 +143,107 @@ interface ChatOptions {
 - `stop` – Optional stop sequences.
 - `temperature` – Controls randomness.
 - `max_completion_tokens` – Maximum generation length.
+- `tools` – Optional array of tool definitions for function calling.
+- `serviceExclusion` – Exclude specific services from fallback.
+
+## Tool Calling / Function Calling
+
+Auto AI supports tool/function calling across all providers. When you define tools, the model can ask to use them.
+
+### Basic Tool Calling
+
+```typescript
+import { Chat } from "@trixty/auto-ai";
+
+const tools = [
+  {
+    type: "function",
+    function: {
+      name: "get_weather",
+      description: "Get the current weather for a location",
+      parameters: {
+        type: "object",
+        properties: {
+          location: {
+            type: "string",
+            description: "City and state, e.g. San Francisco, CA",
+          },
+        },
+        required: ["location"],
+      },
+    },
+  },
+];
+
+const messages = [
+  { role: "user", content: "What's the weather in New York?" }
+];
+
+const response = await Chat(messages, {
+  model: "Groq:llama-3.3-70b-versatile",
+  tools: tools,
+});
+
+// Parse the response
+const parsed = JSON.parse(response);
+console.log("Content:", parsed.content);
+console.log("Tool Calls:", parsed.toolCalls);
+```
+
+### Handling Tool Calls
+
+When tools are provided:
+- Streaming is **automatically disabled**
+- The response includes a `toolCalls` array if the model requests to use tools
+- Each tool call contains: `id`, `function.name`, and `function.arguments` (as JSON string)
+
+**Response format with tools:**
+```typescript
+interface ChatResponse {
+  content: string;           // Model's text response
+  toolCalls?: ToolCall[];    // Array of tool calls if the model made any
+  service: string;           // Provider name
+  model: string;             // Model used
+}
+
+interface ToolCall {
+  id: string;
+  type: "function";
+  function: {
+    name: string;
+    arguments: string;  // JSON stringified arguments
+  };
+}
+```
+
+### Continuing Conversations with Tool Results
+
+After executing tools, you can continue the conversation:
+
+```typescript
+const toolResults = [
+  { role: "user", content: "What's the weather in New York?" },
+  {
+    role: "assistant",
+    content: "I'll check the weather for you.",
+  },
+  {
+    role: "tool",
+    tool_call_id: "call_1",
+    content: JSON.stringify({ location: "New York", temperature: 72, condition: "Sunny" }),
+  },
+];
+
+const finalResponse = await Chat(toolResults, {
+  model: "Groq:llama-3.3-70b-versatile",
+}, true); // true for plain text
+
+console.log(finalResponse);
+```
+
+### Example: Complete Tool Loop
+
+See [`test/tools.js`](test/tools.js) for a complete working example.
 
 ## Provider Defaults
 

@@ -1,4 +1,10 @@
-import type { ChatMessage, ChatOptions, Service } from "./types";
+import type {
+  ChatMessage,
+  ChatOptions,
+  Service,
+  ChatResponse,
+  ToolMessage,
+} from "./types";
 import { GroqService } from "./lib/groq";
 import { CerebrasService } from "./lib/cerebras";
 import { OpenRouterService } from "./lib/openrouter";
@@ -14,7 +20,7 @@ const services: Service[] = [
 ];
 
 const Chat = async (
-  messages: ChatMessage[],
+  messages: (ChatMessage | ToolMessage)[],
   options?: ChatOptions,
   plainText: boolean = false
 ) => {
@@ -32,22 +38,51 @@ const Chat = async (
   }
 
   const response = await service.chat(messages, cleanOptions);
-  let result = "";
 
-  for await (const chunk of response) {
-    result += chunk;
+  // Check if response is a ChatResponse object (when tools are used) or AsyncIterable (streaming)
+  if (Symbol.asyncIterator in Object(response)) {
+    // Streaming response
+    let result = "";
+    for await (const chunk of response as AsyncIterable<string>) {
+      result += chunk;
+    }
+
+    if (plainText) {
+      return result;
+    }
+
+    return JSON.stringify({
+      service: service.name,
+      model: model,
+      result: result,
+    });
+  } else {
+    // Tool calls response
+    const chatResponse = response as ChatResponse;
+
+    if (plainText) {
+      return {
+        content: chatResponse.content,
+        toolCalls: chatResponse.toolCalls,
+      };
+    }
+
+    return JSON.stringify({
+      service: chatResponse.service,
+      model: chatResponse.model,
+      content: chatResponse.content,
+      toolCalls: chatResponse.toolCalls,
+    });
   }
-
-  if (plainText) {
-    return result; // the plain text.
-  }
-
-  // object with the service name and the full result text.
-  return JSON.stringify({
-    service: service.name,
-    model: model,
-    result: result,
-  });
 };
 
 export { Chat };
+export type {
+  ChatMessage,
+  ChatOptions,
+  Service,
+  ChatResponse,
+  ToolMessage,
+  Tool,
+  ToolCall,
+} from "./types";
